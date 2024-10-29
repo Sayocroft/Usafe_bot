@@ -1,0 +1,46 @@
+{
+    "resources": [
+        {
+            "type": "Mental Health Support",
+            "organization": "Mental Health NGO",
+            "description": "Offers counseling and mental health resources for hate crime survivors.",
+            "url": "https://mentalhealthngo.org/support",
+            "contact": "contact@mentalhealthngo.org"
+        },
+        {
+            "type": "Legal Aid",
+            "organization": "Legal Assistance Group",
+            "description": "Provides free legal advice and support for victims of hate crimes.",
+            "url": "https://legalassistance.org/legal-aid",
+            "contact": "help@legalassistance.org"
+        },
+        {
+            "type": "Legal Guidance",
+            "organization": "Rights Protection Center",
+            "description": "Guides individuals on their rights and the legal process involved in reporting and prosecuting hate crimes.",
+            "url": "https://rightsprotection.org/legal-guidance",
+            "contact": "guidance@rightsprotection.org"
+        },
+        {
+            "type": "Report a Crime",
+            "organization": "Online Crime Reporting Portal",
+            "description": "Allows victims to report hate crimes online, ensuring privacy and accessibility.",
+            "url": "https://onlinereporting.org/report-crime",
+            "contact": "report@onlinereporting.org"
+        },
+        {
+            "type": "Legal Funding Aid",
+            "organization": "Justice Funding Network",
+            "description": "Provides financial assistance for legal fees related to hate crime cases.",
+            "url": "https://justicefunding.org/legal-aid",
+            "contact": "funding@justicefunding.org"
+        },
+        {
+            "type": "Hate Speech and Digital Violence Guidance",
+            "organization": "Digital Rights Group",
+            "description": "Offers guidance for dealing with online hate speech and digital harassment.",
+            "url": "https://digitalrightsgroup.org/online-safety",
+            "contact": "support@digitalrightsgroup.org"
+        }
+    ]
+}
