@@ -1,9 +1,9 @@
 1. seaborn==0.12.2              # Data visualization library built on matplotlib for statistical graphics.
-2. testbook==0.4.2              # For testing Jupyter notebooks, allowing interaction with notebook cells programmatically.
-3. mlflow==2.4.1                # Tool for managing the machine learning lifecycle, including experimentation, reproducibility, and deployment.
+#2. testbook==0.4.2              # For testing Jupyter notebooks, allowing interaction with notebook cells programmatically.
+#3. mlflow==2.4.1                # Tool for managing the machine learning lifecycle, including experimentation, reproducibility, and deployment.
 4. parsenvy==3.0.2              # Utility to parse environment variables in a simple way.
 5. protobuf==4.23.3             # Library to serialize structured data, commonly used for configuration and data exchange.
-6. statsmodels==0.14.0          # For statistical modeling, offering tools for performing regressions and other statistical tests.
+#6. statsmodels==0.14.0          # For statistical modeling, offering tools for performing regressions and other statistical tests.
 7. matplotlib==3.7.1            # Core plotting library for Python, foundational for creating 2D charts and graphics.
 8. numpy==1.24.3                # Fundamental library for numerical computing, supporting arrays and mathematical operations.
 9. pandas==2.0.1                # Data analysis and manipulation library, provides data structures like DataFrames for handling data.
