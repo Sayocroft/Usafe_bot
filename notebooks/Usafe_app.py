@@ -35,54 +35,7 @@ else:
 st.header(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
 st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your Safety and Mental Health Matter")
 
-def detect_hate_crime_type(inquiry, retrieval_chain=retriever_combined):
-    """
-    Detects the type of hate crime based on the user's inquiry using the 'usafe_combined' vector store.
-    """
-    # Ensure the input is a string before querying
-    if isinstance(inquiry, dict):
-        inquiry = inquiry.get("input", "")
 
-    if not isinstance(inquiry, str):
-        st.error("Invalid input. Please provide a valid text.")
-        return "Unknown"
-    
-    # Query the combined vector store to find the most relevant example
-    try:
-        response = retrieval_chain.invoke({"input": inquiry})
-    except Exception as e:
-        st.error(f"Error querying vector store: {e}")
-        return "Unknown"
 
-    # Check if the response is a dictionary and contains 'answer'
-    if isinstance(response, dict):
-        # Extract the answer and ensure it's a string
-        response_text = response.get('answer')
-        if isinstance(response_text, str):
-            # Process the extracted text to detect the type of hate crime
-            if "discrimination" in response_text.lower():
-                return "Discrimination"
-            elif "hate speech" in response_text.lower():
-                return "Hate Speech"
-            elif "violence" in response_text.lower():
-                return "Violence"
-            else:
-                return "Unknown"
-        else:
-            st.error("The response does not contain valid text.")
-            return "Unknown"
-    else:
-        st.error("Invalid response format from vector store.")
-        return "Unknown"
-
-# User Input
-user_input = st.text_area("Enter your inquiry:", placeholder="Describe the incident...")
-
-if st.button("Submit"):
-    if user_input.strip():
-        detected_type = detect_hate_crime_type(user_input)
-        st.write(f"**Detected Hate Crime Type:** {detected_type}")
-    else:
-        st.warning("Please enter a query.")
 
 
