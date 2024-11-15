@@ -52,25 +52,92 @@ st.title(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
 
 st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your Safety and Mental Health Matter")
 
-# User input: Description of the incident
-user_input = st.text_area("Please describe what happened to you", height=150)
+# Define the hate crimes types
+HATE_CRIMES_TYPE = {
+    'anti_religious_def.pdf': 'Anti-religious Hate Crime',
+    'racist_def.pdf': 'Racist and Xenophobic Hate Crime',
+    'gender_lgbt_def.pdf': 'Gender and LGBTQ+ Hate Crime'
+}
 
-if st.button("Detect Hate Crime"):
-    if user_input:
-        try:
-            # Step 1: Detect the hate crime type using `invoke()`
-            hate_crime_response = retriever_combined.invoke(
-                {"input": f"Please classify the following incident description:\n'{user_input}'"}
-            )
-
-            # Extract the detected hate crime type from the response
-            detected_hate_crime = hate_crime_response.get('result', {}).get('content', "Unknown")
+def detect_hate_crime_type(inquiry, retrieval_chain=retriever_combined):
+    """
+    Detects the type of hate crime based on user input and displays the result in Streamlit.
+    """
+    try:
+        # Query the retrieval chain with the user inquiry
+        result = retrieval_chain.invoke({"input": inquiry})
+        
+        # Check if the response contains context information
+        if result and 'context' in result and result['context']:
+            # Extract the source from the metadata
+            metadata_source = result['context'][0].dict().get('metadata', {}).get('source', "")
             
-            # Display the detected type
-            st.write(f"Detected Hate Crime Type: **{detected_hate_crime}**")
+            # Detect the hate crime type using the HATE_CRIMES_TYPE mapping
+            detected_type = HATE_CRIMES_TYPE.get(metadata_source.split('/')[-1], "Unknown")
+        else:
+            detected_type = "Unknown"
 
-        except Exception as e:
-            st.error(f"Error in detecting hate crime: {e}")
+        # Display the detected type using Streamlit
+        st.write(f"**Detected Hate Crime Type:** {detected_type}")
+        return detected_type
+
+    except Exception as e:
+        st.error(f"Error detecting hate crime type: {e}")
+        return "Unknown"
+
+def handle_user_query(inquiry):
+    """
+    Handles user query by detecting hate crime type and offering options using Streamlit.
+    """
+    # Step 1: Detect the hate crime type
+    detected_type = detect_hate_crime_type(inquiry)
+    st.write(f"**Detected Hate Crime Type:** {detected_type}")
+
+    # Step 2: Present user options using Streamlit
+    st.write("What information would you like to access?")
+    option = st.selectbox(
+        "Choose an option:",
+        ["Select an option", "Relevant Laws Germany", "Local Resources and Support", 
+         "Steps to Report a Crime in Germany", "Generic Information"]
+    )
+
+    # Step 3: Determine the query based on user selection
+    pdf_query = ""
+    if option == "Relevant Laws Germany":
+        pdf_query = "Relevant laws related to hate crimes in Germany"
+    elif option == "Local Resources and Support":
+        pdf_query = "Local resources: NGOs, Legal Aid, Counseling, etc., to support hate crime victims"
+    elif option == "Steps to Report a Crime in Germany":
+        pdf_query = "Steps on how to report a hate crime in Germany"
+    elif option == "Generic Information":
+        pdf_query = "General information on hate crimes, psychological effects, and resources"
+    
+    # If no valid option is selected
+    if not pdf_query:
+        st.warning("Please select a valid option.")
+        return
+
+    # Step 4: Retrieve and display the response from the vector store
+    response = retriever_general.invoke({"input": pdf_query})
+    
+    # Check if the response contains an answer
+    answer = response.get('answer', 'No relevant information found').strip("\n")
+    st.write("**Response:**")
+    st.write(answer)
+
+# Example usage within Streamlit
+st.title("Usafe ChatBot")
+user_input = st.text_input("Enter your inquiry:")
+if user_input:
+    handle_user_query(user_input)
+  
+
+# Add a button to trigger the query
+if st.button("Submit"):
+    if user_input:
+        handle_user_query(user_input)
+    else:
+        st.warning("Please enter a description of the incident.")
 
 
 

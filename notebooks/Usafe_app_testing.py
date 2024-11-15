@@ -54,3 +54,58 @@ if query:
     st.subheader("Specific Hate Crime Information")
     for i, doc in enumerate(combined_response):
         st.write(f"{i + 1}. {doc.page_content}")
+
+
+
+
+        if st.button("Submit"):
+    if user_input:
+        # Step 1: Detect the hate crime type using `invoke()`
+        try:
+            # Retrieve the response from the combined vector store
+            hate_crime_response = retriever_combined.invoke(
+                {"input": f"Please classify the following incident description to detect the hate crime type:\n'{user_input}'"}
+            )
+
+            # Debug: Print the raw response to understand its structure
+            st.write("Raw Response:", hate_crime_response)
+
+            # Extract the detected hate crime type from the response
+            detected_hate_crime = hate_crime_response.get('result', {}).get('content', "Unknown")
+            st.write(f"Detected Hate Crime: {detected_hate_crime}")
+
+            # Provide an empathetic response
+            st.write("I'm really sorry to hear about your experience. You are not alone, and we're here to help you find justice and support.")
+
+        except Exception as e:
+            st.error(f"Error in detecting hate crime: {e}")
+
+        # Step 2: Offer guidance options
+        st.write("Please choose one of the following options to proceed:")
+        options = ["Understand Your Rights", "Report a Crime", "Find Local Resources", "General Information"]
+        selected_option = st.radio("Select an option", options)
+
+        if selected_option:
+            query_map = {
+                "Understand Your Rights": "laws",
+                "Report a Crime": "reporting_steps",
+                "Find Local Resources": "resources",
+                "General Information": "history"
+            }
+            query_type = query_map[selected_option]
+
+            try:
+                # Retrieve information from the general vector store
+                general_response = retriever_general.invoke(
+                    {"input": f"Please provide information about {query_type} related to hate crimes."}
+                )
+
+                # Debug: Print the raw response to understand its structure
+                st.write("Raw Response:", general_response)
+
+                # Extract the answer from the response
+                response_text = general_response.get('result', {}).get('content', "No information found.")
+                st.write(response_text)
+
+            except Exception as e:
+                st.error(f"Error retrieving information: {e}")
