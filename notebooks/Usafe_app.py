@@ -1,37 +1,19 @@
 import streamlit as st
 from langchain.vectorstores import FAISS
-from langchain.chains import RetrievalQA
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_groq import ChatGroq
 import os
+from langchain.chains import RetrievalQA
 
 # Step 0: API
 
 os.environ["GROQ_API_KEY"] = "sk_CZ8i7Axljvq4EEUxEybdWGdyb3FYxTnafeQGz4Ydl98fqV20gnzF"
 
-# Step 1: Initialize Llama Model
-llama_model = ChatGroq(model="llama3-8b-8192")
 
-# Step 2: Load Vector Stores
-combined_vector_store = FAISS.load_local("usafe_combined")
-general_vector_store = FAISS.load_local("usafe_general")
-
-
-# Step 3: Initialize Chains for both vector stores
-combined_chain = RetrievalQA.from_chain_type(
-    llm=llama_model,
-    chain_type="stuff",
-    retriever=combined_vector_store.as_retriever()
-)
-
-general_chain = RetrievalQA.from_chain_type(
-    llm=llama_model,
-    chain_type="stuff",
-    retriever=general_vector_store.as_retriever()
-)
 
 # Step 4: Header and intro text
 
-
+st.image("https://emojicdn.elk.sh/safety_vest", use_column_width=True)
 st.set_page_config(page_title="Usafe", page_icon=":safety_vest:")
 
 st.header(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
