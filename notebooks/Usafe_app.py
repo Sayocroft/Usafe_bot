@@ -17,7 +17,7 @@ st.write("Loading vector stores...")
 retriever_combined = load_vector_store('notebooks/vector_databases/usafe_combined')
 retriever_general = load_vector_store('notebooks/vector_databases/usafe_general')
 
-# Check if the vector stores are loaded correctly
+# Check if the vector stores are loaded correctly (delete later for the demo)
 if retriever_combined:
     st.success("Loaded 'usafe_combined' vector store successfully.")
     st.write(f"Number of documents in 'usafe_combined': {retriever_combined.vectorstore.index.ntotal}")
@@ -35,25 +35,54 @@ else:
 st.header(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
 st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your Safety and Mental Health Matter")
 
-# Step 3: User query input
-query = st.text_input("Enter your question:")
+def detect_hate_crime_type(inquiry, retrieval_chain=retriever_combined):
+    """
+    Detects the type of hate crime based on the user's inquiry using the 'usafe_combined' vector store.
+    """
+    # Ensure the input is a string before querying
+    if isinstance(inquiry, dict):
+        inquiry = inquiry.get("input", "")
 
-
-# Step 4: Display results from the appropriate vector store
-if query:
-    st.write("Searching in the general knowledge base...")
-    general_response = retriever_general.get_relevant_documents(query)
+    if not isinstance(inquiry, str):
+        st.error("Invalid input. Please provide a valid text.")
+        return "Unknown"
     
-    st.write("Searching in the specific hate crime database...")
-    combined_response = retriever_combined.get_relevant_documents(query)
-    
-    # Display results from the general vector store
-    st.subheader("General Information")
-    for i, doc in enumerate(general_response):
-        st.write(f"{i + 1}. {doc['text']}")
+    # Query the combined vector store to find the most relevant example
+    try:
+        response = retrieval_chain.invoke({"input": inquiry})
+    except Exception as e:
+        st.error(f"Error querying vector store: {e}")
+        return "Unknown"
 
-    # Display results from the combined vector store
-    st.subheader("Specific Hate Crime Information")
-    for i, doc in enumerate(combined_response):
-        st.write(f"{i + 1}. {doc['text']}")
+    # Check if the response is a dictionary and contains 'answer'
+    if isinstance(response, dict):
+        # Extract the answer and ensure it's a string
+        response_text = response.get('answer')
+        if isinstance(response_text, str):
+            # Process the extracted text to detect the type of hate crime
+            if "discrimination" in response_text.lower():
+                return "Discrimination"
+            elif "hate speech" in response_text.lower():
+                return "Hate Speech"
+            elif "violence" in response_text.lower():
+                return "Violence"
+            else:
+                return "Unknown"
+        else:
+            st.error("The response does not contain valid text.")
+            return "Unknown"
+    else:
+        st.error("Invalid response format from vector store.")
+        return "Unknown"
+
+# User Input
+user_input = st.text_area("Enter your inquiry:", placeholder="Describe the incident...")
+
+if st.button("Submit"):
+    if user_input.strip():
+        detected_type = detect_hate_crime_type(user_input)
+        st.write(f"**Detected Hate Crime Type:** {detected_type}")
+    else:
+        st.warning("Please enter a query.")
+
 
