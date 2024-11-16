@@ -29,6 +29,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements_dev.txt
+
+#For prod env
+python -m venv usafe_env
+source usafe_env/bin/activate
+pip install -r requirements_prod.txt
 ```
 
 The `requirements.txt` file contains the libraries needed for deployment.. of model or dashboard .. thus no jupyter or other libs used during development.
