@@ -49,98 +49,52 @@ else:
     st.error("Failed to load 'usafe_general' vector store.")
 
 st.title(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
-
 st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your Safety and Mental Health Matter")
 
-# Define the hate crimes types
-HATE_CRIMES_TYPE = {
-    'anti_religious_def.pdf': 'Anti-religious Hate Crime',
-    'racist_def.pdf': 'Racist and Xenophobic Hate Crime',
-    'gender_lgbt_def.pdf': 'Gender and LGBTQ+ Hate Crime'
-}
+# User input field
+user_input = st.text_input("Enter your request here:", placeholder="Type your question or concern...", key="user_input")
 
-def detect_hate_crime_type(inquiry, retrieval_chain=retriever_combined):
-    """
-    Detects the type of hate crime based on user input and displays the result in Streamlit.
-    """
-    try:
-        # Query the retrieval chain with the user inquiry
-        result = retrieval_chain.invoke({"input": inquiry})
-        
-        # Check if the response contains context information
-        if result and 'context' in result and result['context']:
-            # Extract the source from the metadata
-            metadata_source = result['context'][0].dict().get('metadata', {}).get('source', "")
-            
-            # Detect the hate crime type using the HATE_CRIMES_TYPE mapping
-            detected_type = HATE_CRIMES_TYPE.get(metadata_source.split('/')[-1], "Unknown")
-        else:
-            detected_type = "Unknown"
-
-        # Display the detected type using Streamlit
-        st.write(f"**Detected Hate Crime Type:** {detected_type}")
-        return detected_type
-
-    except Exception as e:
-        st.error(f"Error detecting hate crime type: {e}")
-        return "Unknown"
-
-def handle_user_query(inquiry):
-    """
-    Handles user query by detecting hate crime type and offering options using Streamlit.
-    """
-    # Step 1: Detect the hate crime type
-    detected_type = detect_hate_crime_type(inquiry)
-    st.write(f"**Detected Hate Crime Type:** {detected_type}")
-
-    # Step 2: Present user options using Streamlit
-    st.write("What information would you like to access?")
-    option = st.selectbox(
-        "Choose an option:",
-        ["Select an option", "Relevant Laws Germany", "Local Resources and Support", 
-         "Steps to Report a Crime in Germany", "Generic Information"]
-    )
-
-    # Step 3: Determine the query based on user selection
-    pdf_query = ""
-    if option == "Relevant Laws Germany":
-        pdf_query = "Relevant laws related to hate crimes in Germany"
-    elif option == "Local Resources and Support":
-        pdf_query = "Local resources: NGOs, Legal Aid, Counseling, etc., to support hate crime victims"
-    elif option == "Steps to Report a Crime in Germany":
-        pdf_query = "Steps on how to report a hate crime in Germany"
-    elif option == "Generic Information":
-        pdf_query = "General information on hate crimes, psychological effects, and resources"
-    
-    # If no valid option is selected
-    if not pdf_query:
-        st.warning("Please select a valid option.")
-        return
-
-    # Step 4: Retrieve and display the response from the vector store
-    response = retriever_general.invoke({"input": pdf_query})
-    
-    # Check if the response contains an answer
-    answer = response.get('answer', 'No relevant information found').strip("\n")
-    st.write("**Response:**")
-    st.write(answer)
-
-# Example usage within Streamlit
-st.title("Usafe ChatBot")
-user_input = st.text_input("Enter your inquiry:")
+# Step 3: Handle user input
 if user_input:
-    handle_user_query(user_input)
-  
+    # Acknowledge the user's input
+    st.write("I’m truly sorry that you’ve gone through this. No one should ever face such treatment. Thank you for trusting me with your story.")
 
-# Add a button to trigger the query
-if st.button("Submit"):
-    if user_input:
-        handle_user_query(user_input)
-    else:
-        st.warning("Please enter a description of the incident.")
-
-
-
-
-
+    # Step 4: Retrieve relevant documents from vector stores
+    combined_results = retriever_combined.get_relevant_documents(user_input)
+    general_results = retriever_general.get_relevant_documents(user_input)
+    
+    # Extract relevant definitions and laws
+    if combined_results:
+        hate_crime_def = combined_results[0].page_content
+        st.write(f"Based on what you shared, it seems like you experienced a hate crime: {hate_crime_def}")
+    
+    if general_results:
+        law_info = general_results[0].page_content
+        st.write(f"This is illegal in Germany. Here’s one law that can protect you: {law_info}")
+    
+    # Step 5: Display options
+    st.write("How would you like me to assist you further?")
+    option = st.selectbox(
+        "Choose one of the options below:",
+        ("Select...", "Understanding Rights", "Steps to Report a Hate Crime", "Local Resources in Berlin", "General Information")
+    )
+    
+    # Step 6: Handle user selection
+    if option != "Select...":
+        if option == "Understanding Rights":
+            st.write("Retrieving information on your rights...")
+            rights_info = retriever_general.get_relevant_documents("rights")[0].page_content
+            st.write(rights_info)
+        elif option == "Steps to Report a Hate Crime":
+            st.write("Retrieving steps on how to report a hate crime...")
+            report_info = retriever_general.get_relevant_documents("report")[0].page_content
+            st.write(report_info)
+        elif option == "Local Resources in Berlin":
+            st.write("Retrieving local resources...")
+            resources_info = retriever_general.get_relevant_documents("resources")[0].page_content
+            st.write(resources_info)
+        elif option == "General Information":
+            st.write("Retrieving general information...")
+            general_info = retriever_general.get_relevant_documents("general info")[0].page_content
+            st.write(general_info)
 
