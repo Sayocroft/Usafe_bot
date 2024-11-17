@@ -102,16 +102,10 @@ def get_relevant_info_by_option(query, section_filter=None, k=5):
 if submit_button:
     st.session_state['submitted'] = True
 
-    # Step 5.1: Analyze the sentiment of the user's input
-    sentiment = analyze_sentiment(st.session_state['user_input'])
-    if sentiment == "negative":
-        st.write("🔴 I sense that you're feeling distressed. Let's find the support you need.")
-    elif sentiment == "positive":
-        st.write("🟢 I'm glad to hear you're feeling okay. Let's see how I can assist you further.")
-    else:
-        st.write("🟡 Thank you for sharing. Let’s proceed to find the best information for you.")
+# Run the following only if the form is submitted
+if st.session_state.get('submitted'):
 
-    # Step 5.2: Retrieve relevant documents to identify hate crime type
+# Step 5.2: Retrieve relevant documents to identify hate crime type
     combined_results = retriever_combined.get_relevant_documents(st.session_state['user_input'])
     
     hate_crime_type = None
@@ -120,24 +114,51 @@ if submit_button:
         if hate_crime_source:
             if "anti_religious_def.pdf" in hate_crime_source:
                 hate_crime_type = "Anti-Religious Hate Crime"
-                st.write("🛑 You experienced an **Anti-Religious Hate Crime**.")
+                st.write("### **Unfortunately, you experienced an Anti-Religious Hate Crime**")
             elif "racist_def.pdf" in hate_crime_source:
                 hate_crime_type = "Racist and Xenophobic Hate Crime"
-                st.write("🛑 You experienced a **Racist and Xenophobic Hate Crime**.")
+                st.write("### **Unfortunately, you experienced a Racist and Xenophobic Hate Crime**")
             elif "gender_lgbt_def.pdf" in hate_crime_source:
                 hate_crime_type = "Gender and LGBTQ+ Hate Crime"
-                st.write("🛑 You experienced a **Gender and LGBTQ+ Hate Crime**.")
+                st.write("### **Unfortunately, you have experienced a Gender and Anti-LGBTQ+ Hate Crime**")
 
+
+    # Step 5.1: Analyze the sentiment of the user's input
+    sentiment = analyze_sentiment(st.session_state['user_input'])
+
+    if sentiment == "negative":
+        st.write("""
+        🛑 **I sense that you’re feeling distressed**, and I want you to know you’re not alone. Your feelings are valid, and it's okay to take a moment to breathe.  
+        - **Prioritize your safety**: If you're in immediate danger, please call the Berlin police at **110** or reach out to someone nearby for help.
+        - **Reach out for support**: You don’t have to go through this alone. Connecting with a friend, family member, or support hotline can make a difference.
+        - **Resources**: Below, you’ll find links to organizations and support groups that can provide assistance. Remember, it’s okay to seek help.
+        """)
+        st.warning("⚠️ Your safety and mental well-being are important. Take your time, and let’s find the best resources to support you.")
+
+    elif sentiment == "positive":
+        st.write("""
+        🟢 **I'm glad to hear you're feeling okay!** It's great that you're in a positive headspace.
+        - Let's focus on the next steps to ensure you have all the information and support you need.
+        - Feel free to explore the resources or ask about anything specific you'd like assistance with.
+        """)
+        st.success("😊 Thank you for reaching out. Let's find the information that can help you further.")
+
+    else:  # Neutral sentiment
+        st.write("""
+        🟡 **I’m truly sorry you had to go through that**. Thank you for trusting me enough to reach out.
+        - Please take a moment to review the resources that might be helpful for your situation.
+        - If you’re unsure where to start, you can explore options like understanding your rights, how to report an incident, or connecting with support organizations.
+        """)
+        st.info("🔍 Let’s proceed to gather more information and guide you towards the best support available.")
         
-        st.markdown("### Before I can provide more practical information...")
-
+ 
 # Conditionally display the sidebar content only after form submission
 if st.session_state.get('submitted'):
     with st.sidebar:
         st.success("Your Anti-Discrimination Helpdesk")
-        st.markdown("### Quick Access")
-        st.write("Select an option from the main interface to proceed.")
     
+# Add an expandable section for practical information
+with st.expander("### Before I can provide more practical information..."):
     st.markdown("""
     🛑 **Prioritize Your Safety** 
        - Move to a safe place if you feel threatened. If needed, call emergency services or ask someone nearby for assistance.
