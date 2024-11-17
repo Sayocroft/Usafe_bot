@@ -1,0 +1,57 @@
+# Step 3: Define the prompt template
+prompt_template = PromptTemplate(
+    input_variables=["context"],  # Updated to use 'context' instead of 'documents'
+    template="Provide a helpful response based on the following context: {context}"
+)
+
+# Step 4: Connect Chains (LLM + Vector Store)
+def connect_chains(retriever):
+    """
+    Connects the retriever with the LLM using a retrieval chain.
+    """
+    stuff_documents_chain = create_stuff_documents_chain(
+        llm=llm,
+        prompt=prompt_template
+    )
+    retrieval_chain = create_retrieval_chain(
+        retriever=retriever,
+        combine_docs_chain=stuff_documents_chain
+    )
+    return retrieval_chain
+
+# Create chains for both general and combined retrievals
+general_chain = connect_chains(retriever_general)
+combined_chain = connect_chains(retriever_combined)
+
+# Step 5: Streamlit UI Setup
+st.title(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
+st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your safety and mental health matter.")
+
+# Initialize session state for tracking form submissions
+if 'submitted' not in st.session_state:
+    st.session_state['submitted'] = False
+
+# Step 1: Define the user form for input
+with st.form(key="user_form"):
+    user_input = st.text_input("Describe briefly what happened to you:", placeholder="Type here...", key="user_input")
+    submit_button = st.form_submit_button(label="Submit")
+
+if user_input :
+    # Select which chain to use based on user's input
+    chain_to_use = combined_chain if "specific case" in user_input else general_chain
+    # Use .invoke() method with the correct input key
+    response = chain_to_use.invoke({"input": user_input})
+    st.write("### Response:")
+    st.write(response["result"])
+
+    # Step 5: Handle form submission
+if submit_button:
+    st.session_state['submitted'] = True
+
+# Step 6: Check if the input was submitted and handle user interaction
+if st.session_state['submitted'] and st.session_state['user_input']:
+    st.markdown("### I’m truly sorry that you’ve gone through this.")
+    st.markdown("No one should ever face such treatment. Thank you for trusting me with your story.")
+
+
+
