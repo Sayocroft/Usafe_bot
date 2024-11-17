@@ -1,157 +1,57 @@
+# Step 3: Define the prompt template
+prompt_template = PromptTemplate(
+    input_variables=["context"],  # Updated to use 'context' instead of 'documents'
+    template="Provide a helpful response based on the following context: {context}"
+)
 
-# Check if the vector stores are loaded correctly (delete later for the demo)
-if retriever_combined:
-    st.success("Loaded 'usafe_combined' vector store successfully.")
-    st.write(f"Number of documents in 'usafe_combined': {retriever_combined.vectorstore.index.ntotal}")
-else:
-    st.error("Failed to load 'usafe_combined' vector store.")
-
-if retriever_general:
-    st.success("Loaded 'usafe_general' vector store successfully.")
-    st.write(f"Number of documents in 'usafe_general': {retriever_general.vectorstore.index.ntotal}")
-else:
-    st.error("Failed to load 'usafe_general' vector store.")
-
-
-
-# Function to retrieve documents using metadata filtering
-def get_relevant_info_with_metadata(query, metadata_filter=None, k=2, max_sentences=3):
+# Step 4: Connect Chains (LLM + Vector Store)
+def connect_chains(retriever):
     """
-    Retrieve a concise response using metadata filters.
+    Connects the retriever with the LLM using a retrieval chain.
     """
-    try:
-        if metadata_filter:
-            results = retriever_general.get_relevant_documents(
-                query,
-                search_kwargs={'k': k, 'metadata_filters': metadata_filter}
-            )
-        else:
-            results = retriever_general.get_relevant_documents(query, search_kwargs={'k': k})
-
-        if results:
-            content = results[0].page_content.strip()
-            # Limit to the first few sentences
-            sentences = content.split('. ')
-            return '. '.join(sentences[:max_sentences]) + '.' if len(sentences) > max_sentences else content
-        else:
-            return None
-    except AttributeError as e:
-        st.error(f"Error during retrieval: {e}")
-        return None
-
-
-def generate_user_prompt(crime_type, hate_crime_definitions, law_definitions, supportive_resources, how_to_report_a_crime):
-    """
-    Generate a step-by-step, empathetic prompt for the Usafe ChatBot.
-    """
-    prompt_string = """
-    Usafe ChatBot Guide:
-
-    Initial Introduction:
-    Welcome to Usafe. I'm here to listen and guide you. Your privacy is my priority, so please feel safe sharing what's on your mind. Let's take it one step at a time. How can I support you today?
-
-    Experience Acknowledgment:
-    I’m truly sorry that you’ve gone through this. No one should ever face such treatment. Thank you for trusting me with your story. Based on what you shared, it seems like a {hate_crime_definitions}.
-
-    Options for Next Steps:
-    How would you like me to assist you further?
-    1. Report this incident to the authorities.
-    2. Understand your rights under German law.
-    3. Find supportive resources like counseling and legal aid.
-    4. Learn more about hate crimes and their impact.
-    
-    Reporting a Hate Crime:
-    If you’d like to report this incident, you can visit your nearest Berlin police station. Make sure to bring any evidence you have. If needed, you can request an interpreter. {how_to_report_a_crime}
-
-    Understanding Rights:
-    Under German law, hate crimes are recognized with increased penalties for bias-motivated crimes. Here are your rights: {law_definitions}
-
-    Supportive Resources:
-    Here are some resources that can provide support:
-    {supportive_resources}
-
-    Communication Style:
-    Keep all responses concise, direct, and supportive. Ensure the user feels heard, understood, and empowered.
-    """
-
-    # Format the prompt with the provided variables
-    return prompt_string.format(
-        crime_type=crime_type,
-        hate_crime_definitions=hate_crime_definitions,
-        law_definitions=law_definitions,
-        supportive_resources=supportive_resources,
-        how_to_report_a_crime=how_to_report_a_crime
+    stuff_documents_chain = create_stuff_documents_chain(
+        llm=llm,
+        prompt=prompt_template
     )
-
-def handle_user_query(user_input):
-    """Handle the user query using the detailed prompt."""
-    response = None
-
-     # Step 0: Retrieve documents from vector stores
-    try:
-        combined_results = retriever_combined.get_relevant_documents(user_input)
-        general_results = retriever_general.get_relevant_documents(user_input)
-    except Exception as e:
-        st.error(f"Error retrieving documents from vector stores: {e}")
-        return
-
-    # Step 1: Generate a detailed prompt based on user input
-    crime_type = "General Hate Crime"  # This can be dynamically determined based on user input
-    hate_crime_definitions = "Any act of violence or discrimination based on race, religion, gender, or sexual orientation."
-    law_definitions = "In Germany, hate crimes are recognized under the Penal Code with increased penalties for bias-motivated crimes."
-    supportive_resources = "Counseling services, legal aid organizations, community support groups."
-    how_to_report_a_crime = "Visit the nearest police station, provide evidence, and request an interpreter if needed."
-
-    # Generate the prompt using your comprehensive template
-    prompt = generate_user_prompt(
-        crime_type,
-        hate_crime_definitions,
-        law_definitions,
-        supportive_resources,
-        how_to_report_a_crime
+    retrieval_chain = create_retrieval_chain(
+        retriever=retriever,
+        combine_docs_chain=stuff_documents_chain
     )
-    try:
-        # Use the generated prompt with the ChatGroq model
-        if hasattr(llm, 'predict'):
-            response = llm.predict(prompt)
-        elif hasattr(llm, 'call'):
-            response = llm.call(prompt)
-        else:
-            st.error("No valid method found for generating a response.")
-            return
+    return retrieval_chain
 
-        # Display the response from ChatGroq
-        st.write(f"ChatGroq Response: {response}")
+# Create chains for both general and combined retrievals
+general_chain = connect_chains(retriever_general)
+combined_chain = connect_chains(retriever_combined)
 
-    except Exception as e:
-        st.error(f"Error retrieving response from ChatGroq: {e}")
-        return
+# Step 5: Streamlit UI Setup
+st.title(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
+st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your safety and mental health matter.")
 
-    # Step 3: Display results from the vector stores
-    st.write("### Usafe Combined Results")
-    for idx, result in enumerate(combined_results):
-        title = result.metadata.get('title', 'No Title')
-        description = result.page_content[:200] + '...' if result.page_content else 'No Description'
-        st.write(f"**Result {idx + 1}**")
-        st.write(f"Title: {title}")
-        st.write(f"Description: {description}")
+# Initialize session state for tracking form submissions
+if 'submitted' not in st.session_state:
+    st.session_state['submitted'] = False
 
-    st.write("\n### Usafe General Results")
-    for idx, result in enumerate(general_results):
-        title = result.metadata.get('title', 'No Title')
-        description = result.page_content[:200] + '...' if result.page_content else 'No Description'
-        st.write(f"**Result {idx + 1}**")
-        st.write(f"Title: {title}")
-        st.write(f"Description: {description}")
+# Step 1: Define the user form for input
+with st.form(key="user_form"):
+    user_input = st.text_input("Describe briefly what happened to you:", placeholder="Type here...", key="user_input")
+    submit_button = st.form_submit_button(label="Submit")
 
-# Submit button
-if st.button("Submit"):
-    if user_input:
-        handle_user_query(user_input)
-    else:
-        st.warning("Please enter a query before submitting.")
+if user_input :
+    # Select which chain to use based on user's input
+    chain_to_use = combined_chain if "specific case" in user_input else general_chain
+    # Use .invoke() method with the correct input key
+    response = chain_to_use.invoke({"input": user_input})
+    st.write("### Response:")
+    st.write(response["result"])
 
-st.write(dir(llm))
+    # Step 5: Handle form submission
+if submit_button:
+    st.session_state['submitted'] = True
+
+# Step 6: Check if the input was submitted and handle user interaction
+if st.session_state['submitted'] and st.session_state['user_input']:
+    st.markdown("### I’m truly sorry that you’ve gone through this.")
+    st.markdown("No one should ever face such treatment. Thank you for trusting me with your story.")
 
 
 
