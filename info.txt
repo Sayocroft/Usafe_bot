@@ -1,0 +1,157 @@
+
+# Check if the vector stores are loaded correctly (delete later for the demo)
+if retriever_combined:
+    st.success("Loaded 'usafe_combined' vector store successfully.")
+    st.write(f"Number of documents in 'usafe_combined': {retriever_combined.vectorstore.index.ntotal}")
+else:
+    st.error("Failed to load 'usafe_combined' vector store.")
+
+if retriever_general:
+    st.success("Loaded 'usafe_general' vector store successfully.")
+    st.write(f"Number of documents in 'usafe_general': {retriever_general.vectorstore.index.ntotal}")
+else:
+    st.error("Failed to load 'usafe_general' vector store.")
+
+
+
+# Function to retrieve documents using metadata filtering
+def get_relevant_info_with_metadata(query, metadata_filter=None, k=2, max_sentences=3):
+    """
+    Retrieve a concise response using metadata filters.
+    """
+    try:
+        if metadata_filter:
+            results = retriever_general.get_relevant_documents(
+                query,
+                search_kwargs={'k': k, 'metadata_filters': metadata_filter}
+            )
+        else:
+            results = retriever_general.get_relevant_documents(query, search_kwargs={'k': k})
+
+        if results:
+            content = results[0].page_content.strip()
+            # Limit to the first few sentences
+            sentences = content.split('. ')
+            return '. '.join(sentences[:max_sentences]) + '.' if len(sentences) > max_sentences else content
+        else:
+            return None
+    except AttributeError as e:
+        st.error(f"Error during retrieval: {e}")
+        return None
+
+
+def generate_user_prompt(crime_type, hate_crime_definitions, law_definitions, supportive_resources, how_to_report_a_crime):
+    """
+    Generate a step-by-step, empathetic prompt for the Usafe ChatBot.
+    """
+    prompt_string = """
+    Usafe ChatBot Guide:
+
+    Initial Introduction:
+    Welcome to Usafe. I'm here to listen and guide you. Your privacy is my priority, so please feel safe sharing what's on your mind. Let's take it one step at a time. How can I support you today?
+
+    Experience Acknowledgment:
+    I’m truly sorry that you’ve gone through this. No one should ever face such treatment. Thank you for trusting me with your story. Based on what you shared, it seems like a {hate_crime_definitions}.
+
+    Options for Next Steps:
+    How would you like me to assist you further?
+    1. Report this incident to the authorities.
+    2. Understand your rights under German law.
+    3. Find supportive resources like counseling and legal aid.
+    4. Learn more about hate crimes and their impact.
+    
+    Reporting a Hate Crime:
+    If you’d like to report this incident, you can visit your nearest Berlin police station. Make sure to bring any evidence you have. If needed, you can request an interpreter. {how_to_report_a_crime}
+
+    Understanding Rights:
+    Under German law, hate crimes are recognized with increased penalties for bias-motivated crimes. Here are your rights: {law_definitions}
+
+    Supportive Resources:
+    Here are some resources that can provide support:
+    {supportive_resources}
+
+    Communication Style:
+    Keep all responses concise, direct, and supportive. Ensure the user feels heard, understood, and empowered.
+    """
+
+    # Format the prompt with the provided variables
+    return prompt_string.format(
+        crime_type=crime_type,
+        hate_crime_definitions=hate_crime_definitions,
+        law_definitions=law_definitions,
+        supportive_resources=supportive_resources,
+        how_to_report_a_crime=how_to_report_a_crime
+    )
+
+def handle_user_query(user_input):
+    """Handle the user query using the detailed prompt."""
+    response = None
+
+     # Step 0: Retrieve documents from vector stores
+    try:
+        combined_results = retriever_combined.get_relevant_documents(user_input)
+        general_results = retriever_general.get_relevant_documents(user_input)
+    except Exception as e:
+        st.error(f"Error retrieving documents from vector stores: {e}")
+        return
+
+    # Step 1: Generate a detailed prompt based on user input
+    crime_type = "General Hate Crime"  # This can be dynamically determined based on user input
+    hate_crime_definitions = "Any act of violence or discrimination based on race, religion, gender, or sexual orientation."
+    law_definitions = "In Germany, hate crimes are recognized under the Penal Code with increased penalties for bias-motivated crimes."
+    supportive_resources = "Counseling services, legal aid organizations, community support groups."
+    how_to_report_a_crime = "Visit the nearest police station, provide evidence, and request an interpreter if needed."
+
+    # Generate the prompt using your comprehensive template
+    prompt = generate_user_prompt(
+        crime_type,
+        hate_crime_definitions,
+        law_definitions,
+        supportive_resources,
+        how_to_report_a_crime
+    )
+    try:
+        # Use the generated prompt with the ChatGroq model
+        if hasattr(llm, 'predict'):
+            response = llm.predict(prompt)
+        elif hasattr(llm, 'call'):
+            response = llm.call(prompt)
+        else:
+            st.error("No valid method found for generating a response.")
+            return
+
+        # Display the response from ChatGroq
+        st.write(f"ChatGroq Response: {response}")
+
+    except Exception as e:
+        st.error(f"Error retrieving response from ChatGroq: {e}")
+        return
+
+    # Step 3: Display results from the vector stores
+    st.write("### Usafe Combined Results")
+    for idx, result in enumerate(combined_results):
+        title = result.metadata.get('title', 'No Title')
+        description = result.page_content[:200] + '...' if result.page_content else 'No Description'
+        st.write(f"**Result {idx + 1}**")
+        st.write(f"Title: {title}")
+        st.write(f"Description: {description}")
+
+    st.write("\n### Usafe General Results")
+    for idx, result in enumerate(general_results):
+        title = result.metadata.get('title', 'No Title')
+        description = result.page_content[:200] + '...' if result.page_content else 'No Description'
+        st.write(f"**Result {idx + 1}**")
+        st.write(f"Title: {title}")
+        st.write(f"Description: {description}")
+
+# Submit button
+if st.button("Submit"):
+    if user_input:
+        handle_user_query(user_input)
+    else:
+        st.warning("Please enter a query before submitting.")
+
+st.write(dir(llm))
+
+
+
