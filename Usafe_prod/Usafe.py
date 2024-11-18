@@ -16,13 +16,31 @@ HATE_CRIMES_TYPE = {
     'gender_lgbt_def.pdf': 'Gender and LGBTQ+ Hate Crime'
 }
 
-# Set up Streamlit page configuration
+
+# Set page configuration
 st.set_page_config(
     page_title="Usafe",
     page_icon=":safety_vest:",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+
+# Display the main title and subtitle with increased font size
+st.markdown("""
+    <h1 style='text-align: center; font-size: 5rem;'>
+        🦺 Usafe
+    </h1>
+    <h2 style='text-align: center; color: #666; font-size: 2.5rem;'>
+        Your Anti-Hate Crime Helpdesk
+    </h2>
+""", unsafe_allow_html=True)
+
+# Display the introductory message with moderate size and subtle emphasis
+st.markdown("""
+    <p style='text-align: center; font-size: 1.2rem; font-weight: 600;'>
+        Get confidential support and essential guidance in seconds. 
+    </p>
+""", unsafe_allow_html=True)
 
 # Step 1: Initialize the ChatGroq LLM
 def initialize_llm(model_name="llama3-8b-8192"):
@@ -70,10 +88,6 @@ def analyze_sentiment(user_input):
     else:
         return "neutral"
 
-# Set up the Streamlit title and description
-st.title(":safety_vest: Usafe - Your Anti-Discrimination Helpdesk")
-st.write("Facing discrimination or hate? Get confidential support and essential guidance in seconds. Your safety and mental health matter.")
-
 # Initialize session state for tracking form submissions
 if 'submitted' not in st.session_state:
     st.session_state['submitted'] = False
@@ -97,6 +111,52 @@ def get_relevant_info_by_option(query, section_filter=None, k=5):
     except Exception as e:
         st.error(f"Error retrieving information: {e}")
         return "An error occurred while retrieving information."
+    
+ # Function to display personalized information based on the detected hate crime type
+def display_personalized_info(hate_crime_type):
+    with st.expander("### Before I can provide more practical information..."):
+        if hate_crime_type == "Anti-Religious Hate Crime":
+            st.markdown("""
+            🛑 **Prioritize Your Safety**
+               - If you're facing religious discrimination, try to move to a safe place. Call emergency services if needed.
+            
+            📞 **Reach Out for Support**
+               - Contact organizations dedicated to protecting religious rights for advice and support.
+            
+            📝 **Document the Incident**
+               - Note down details specific to the religious context involved.
+            
+            💛 **Focus on Your Well-being**
+               - Speak with a trusted religious leader or mental health professional.
+            """)
+        elif hate_crime_type == "Racist and Xenophobic Hate Crime":
+            st.markdown("""
+            🛑 **Prioritize Your Safety**
+               - If you're being targeted due to your race or ethnicity, move to a safe space. Call emergency services if needed.
+            
+            📞 **Reach Out for Support**
+               - Contact anti-racism advocacy organizations for support.
+            
+            📝 **Document the Incident**
+               - Record details like racial slurs, symbols, or behavior involved.
+            
+            💛 **Focus on Your Well-being**
+               - Engage with supportive communities to process your feelings.
+            """)
+        elif hate_crime_type == "Gender and LGBTQ+ Hate Crime":
+            st.markdown("""
+            🛑 **Prioritize Your Safety**
+               - If you're facing discrimination based on your gender or sexuality, find a safe space.
+            
+            📞 **Reach Out for Support**
+               - LGBTQ+ organizations offer specialized resources and support.
+            
+            📝 **Document the Incident**
+               - Capture details related to gender or sexuality-based discrimination.
+            
+            💛 **Focus on Your Well-being**
+               - Connect with supportive friends or LGBTQ+ groups.
+            """)   
 
 # Step 5: Handle form submission
 if submit_button:
@@ -122,6 +182,8 @@ if st.session_state.get('submitted'):
                 hate_crime_type = "Gender and LGBTQ+ Hate Crime"
                 st.write("### **Unfortunately, you have experienced a Gender and Anti-LGBTQ+ Hate Crime**")
 
+    # Display personalized information based on the detected hate crime type
+    display_personalized_info(hate_crime_type)
 
     # Step 5.1: Analyze the sentiment of the user's input
     sentiment = analyze_sentiment(st.session_state['user_input'])
@@ -157,18 +219,3 @@ if st.session_state.get('submitted'):
     with st.sidebar:
         st.success("Your Anti-Discrimination Helpdesk")
     
-# Add an expandable section for practical information
-with st.expander("### Before I can provide more practical information..."):
-    st.markdown("""
-    🛑 **Prioritize Your Safety** 
-       - Move to a safe place if you feel threatened. If needed, call emergency services or ask someone nearby for assistance.
-    
-    📞 **Reach Out for Support**  
-       - Connect with a trusted friend, family member, or support organization. Talking to someone can help you feel grounded.
-    
-    📝 **Document the Incident** 
-       - Write down details of the incident, such as the date, time, location, and any witnesses.
-    
-    💛 **Focus on Your Well-being**   
-       - Take the time you need to heal. Speak to a counselor, engage in activities you enjoy, or rest. Your well-being matters.
-    """)
