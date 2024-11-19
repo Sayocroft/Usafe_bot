@@ -79,26 +79,33 @@ if 'submitted' not in st.session_state:
 
 # Step 4: Define the user form for input
 with st.form(key="user_form"):
-    user_input = st.text_input("Describe briefly what happened to you:", placeholder="Type here...", key="user_input")
-    submit_button = st.form_submit_button(label="Submit")
+    user_input = st.text_area(
+        "",  # No label
+        placeholder="Describe briefly what happened to you...",
+        key="user_input",
+        height=85  # Adjust height for better user experience
+    )
+
+    submit_button = st.form_submit_button(
+        label="⚖️ Submit",  # Add an emoji to make the button more inviting
+        help="Click here to submit your information."  # Tooltip for extra guidance
+    )
     
-
-
     # Display personalized information based on the detected hate crime type
 def display_practical_info(hate_crime_type):
     """
     Display practical information within an expandable section based on the detected hate crime type.
     """
-    with st.expander("### Quick Overview of Support Available for You..."):
+    with st.expander("### If you’re unsure where to begin, you can start by exploring topics like..."):
         if hate_crime_type == "Gender and LGBTQI+ Hate Crime":
-            st.write("### Resources for Gender and LGBTQI+ Hate Crime")
+            st.write("### Top 3 Essential Steps")
             st.markdown("""
             - **Law**: In Germany, discrimination based on gender identity is illegal. You have rights under the General Equal Treatment Act (AGG).
             - **Support Organization**: Contact **LesMigraS** for counselling.
             - **Legal Aid**: Visit **HateAid** for free legal support.
             """)
         elif hate_crime_type == "Racist and Xenophobic Hate Crime":
-            st.write("### Resources for Racist and Xenophobic Hate Crime")
+            st.write("### Top 3 Essential Steps")
             st.markdown("""
             - **Law**: In Germany, hate crimes based on race and ethnicity are punishable under the Criminal Code.
             - **Support Organization**: Reach out to **ReachOut Berlin** for assistance with racism-related incidents.
@@ -140,25 +147,24 @@ if st.session_state.get('submitted'):
                 hate_crime_type = "Gender and LGBTQI+ Hate Crime"
                 st.write("### **Unfortunately, you have experienced a Gender and Anti-LGBTQI+ Hate Crime**")
     
-    # Display the sentiment-based message
+    # Step 5.3: Display the sentiment-based message
     if sentiment == "negative":
         st.write("""
-        🛑 **I sense that you’re feeling distressed**, and I want you to know you’re not alone. Your feelings are valid, and it's okay to take a moment to breathe.  
-        - **Prioritize your safety**: If you're in immediate danger, please call the Berlin police at **110** or reach out to someone nearby for help.
-        - **Reach out for support**: You don’t have to go through this alone. Connecting with a friend, family member, or support hotline can make a difference.
-        - **Resources**: Below, you’ll find links to organizations and support groups that can provide assistance. Remember, it’s okay to seek help.
+        **I’m really sorry you had to go through this**, and I want you to know you’re not alone. It’s okay to take a moment to breathe and gather yourself.  
+        - **Prioritize your safety**: If you’re in immediate danger, please don’t hesitate to call the Berlin police at **110** or reach out to someone nearby who can assist you.
+        - **Reach out for support**: You don’t have to face this alone. Speaking with a trusted friend, family member, or support organization can make a big difference. Remember, there are people who care deeply and are ready to help.
         """)
-        st.warning("⚠️ Your safety and mental well-being are important. Take your time, and let’s find the best resources to support you.")
+        st.warning("⚠️ **Check the sidebar** for detailed information and links to organizations that can provide practical support. Let’s find the best resources to support you.")
 
     elif sentiment == "neutral":
         st.write("""
         🟡 **I’m truly sorry you had to go through that**. Thank you for trusting me enough to reach out.
-        - Please take a moment to review the resources that might be helpful for your situation.
-        - If you’re unsure where to start, you can explore options like understanding your rights, how to report an incident, or connecting with support organizations.
+        - **Review Resources**: Please take a moment to review the resources that might be helpful for your situation.
+        - **Check the sidebar**: If you’re unsure where to start, you can explore options like understanding your rights, how to report an incident, or connecting with support organizations.
         """)
         st.info("🔍 Let’s proceed to gather more information and guide you towards the best support available.")
 
- 
-        # Display personalized information based on the detected hate crime type
-    if hate_crime_type:display_practical_info(hate_crime_type)
+    # Display practical information based on the detected hate crime type
+    if hate_crime_type:
+        display_practical_info(hate_crime_type)
     
