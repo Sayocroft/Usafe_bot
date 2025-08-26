@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
 import streamlit as st
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 # Load environment variables
