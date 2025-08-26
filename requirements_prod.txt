@@ -2,10 +2,13 @@ streamlit
 langchain-huggingface
 langchain-groq
 langchain
+langchain-community
 torch
 transformers
 pandas
 numpy
 python-dotenv
 faiss-cpu
+nltk
+sentence-transformers
 

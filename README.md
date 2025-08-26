@@ -33,15 +33,19 @@ Many victims don’t know where to begin. Usafe:
 
 ## 🧱 Project Structure
 
+```
 Usafe_bot/
 │
-├── Usafe_app.py                # Streamlit app
-├── notebooks/                  # Prototyping & model building
+├── Usafe_prod/                   # Production Streamlit app
+│   ├── Usafe.py                 # Main Streamlit app
+│   └── pages/                   # Additional pages
+├── notebooks/                   # Prototyping & model building
+│   ├── Usafe_app.py            # Development version
 │   ├── EDA_data_hate_crime.ipynb
 │   ├── general_vector.ipynb
 │   ├── combined_vector.ipynb
 │   └── Prompt_user.ipynb
-├── data/                       # Legal PDFs + prompts
+├── data/                        # Legal PDFs + prompts
 │   ├── gender_lgbt_def.pdf
 │   ├── racist_def.pdf
 │   ├── anti_religious_def.pdf
@@ -62,22 +66,27 @@ This project uses **multiple environments** to avoid dependency conflicts.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
 
-2. 🚀 Production (Streamlit App)
+### 2. 🚀 Production (Streamlit App)
 
+```bash
 python -m venv usafe_env
 source usafe_env/bin/activate
 pip install -r requirements_prod.txt
 
-streamlit run Usafe_app.py
+streamlit run Usafe_prod/Usafe.py
+```
 
-3. 🔍 RAG Environment (Vector Search + Prompting)
+### 3. 🔍 RAG Environment (Vector Search + Prompting)
 
+```bash
 python -m venv rag_env
 source rag_env/bin/activate
 pip install -r requirements_rag.txt
+```
 
-💡 Run deactivate before switching between environments.
+💡 Run `deactivate` before switching between environments.
 
 🧠 Tech Stack
 	•	Python
